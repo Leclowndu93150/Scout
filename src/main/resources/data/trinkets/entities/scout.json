@@ -1,7 +1,7 @@
 {
   "entities": ["player"],
   "slots": [
-    "chest/back",
+    "chest/satchel",
     "legs/pouch"
   ]
 }

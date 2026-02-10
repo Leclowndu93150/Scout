@@ -1,6 +1,8 @@
 {
   "type": "minecraft:smithing_transform",
-  "lib39:discovered_via": "minecraft:diamond",
+  "template": {
+    "item": "minecraft:leather"
+  },
   "base": {
     "item": "scout:pouch"
   },
@@ -8,9 +10,6 @@
     "item": "minecraft:diamond"
   },
   "result": {
-    "item": "scout:upgraded_pouch"
-  },
-  "template": {
-    "item": "minecraft:leather"
+    "id": "scout:upgraded_pouch"
   }
 }

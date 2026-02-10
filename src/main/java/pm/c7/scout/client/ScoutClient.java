@@ -28,9 +28,9 @@ import pm.c7.scout.screen.BagSlot;
 public class ScoutClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
-		ClientPlayNetworking.registerGlobalReceiver(ScoutNetworking.ENABLE_SLOTS, (client, handler, packet, sender) -> {
-			client.execute(() -> {
-				assert client.player != null;
+		ClientPlayNetworking.registerGlobalReceiver(ScoutNetworking.EnableSlotsPayload.ID, (payload, context) -> {
+			context.client().execute(() -> {
+				var client = context.client();
 				ScoutScreenHandler screenHandler = (ScoutScreenHandler) client.player.playerScreenHandler;
 
 				ItemStack satchelStack = ScoutUtil.findBagItem(client.player, BagType.SATCHEL, false);

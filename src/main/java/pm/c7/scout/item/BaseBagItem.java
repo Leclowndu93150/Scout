@@ -2,20 +2,18 @@ package pm.c7.scout.item;
 
 import dev.emi.trinkets.api.SlotReference;
 import dev.emi.trinkets.api.TrinketItem;
-import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.client.item.TooltipContext;
-import net.minecraft.client.item.TooltipData;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.ContainerComponent;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.network.PacketByteBuf;
+import net.minecraft.item.tooltip.TooltipData;
+import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -32,8 +30,6 @@ import java.util.List;
 import java.util.Optional;
 
 public class BaseBagItem extends TrinketItem {
-	private static final String ITEMS_KEY = "Items";
-
 	private final int slots;
 	private final BagType type;
 
@@ -60,8 +56,8 @@ public class BaseBagItem extends TrinketItem {
 	}
 
 	@Override
-	public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-		super.appendTooltip(stack, world, tooltip, context);
+	public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
+		super.appendTooltip(stack, context, tooltip, type);
 		tooltip.add(Text.translatable("tooltip.scout.slots", Text.literal(String.valueOf(this.slots)).formatted(Formatting.BLUE)).formatted(Formatting.GRAY));
 	}
 
@@ -69,19 +65,17 @@ public class BaseBagItem extends TrinketItem {
 		SimpleInventory inventory = new SimpleInventory(this.slots) {
 			@Override
 			public void markDirty() {
-				stack.getOrCreateNbt().put(ITEMS_KEY, ScoutUtil.inventoryToTag(this));
+				DefaultedList<ItemStack> stacks = DefaultedList.ofSize(this.size(), ItemStack.EMPTY);
+				for (int i = 0; i < this.size(); i++) {
+					stacks.set(i, this.getStack(i));
+				}
+				stack.set(DataComponentTypes.CONTAINER, ContainerComponent.fromStacks(stacks));
 				super.markDirty();
 			}
 		};
 
-		NbtCompound compound = stack.getOrCreateNbt();
-		if (!compound.contains(ITEMS_KEY)) {
-			compound.put(ITEMS_KEY, new NbtList());
-		}
-
-		NbtList items = compound.getList(ITEMS_KEY, 10);
-
-		ScoutUtil.inventoryFromTag(items, inventory);
+		ContainerComponent container = stack.getOrDefault(DataComponentTypes.CONTAINER, ContainerComponent.DEFAULT);
+		container.copyTo(inventory.getHeldStacks());
 
 		return inventory;
 	}
@@ -172,9 +166,8 @@ public class BaseBagItem extends TrinketItem {
 			}
 		}
 
-		PacketByteBuf packet = new PacketByteBuf(Unpooled.buffer());
 		if (player instanceof ServerPlayerEntity serverPlayer) {
-			ServerPlayNetworking.send(serverPlayer, ScoutNetworking.ENABLE_SLOTS, packet);
+			ServerPlayNetworking.send(serverPlayer, new ScoutNetworking.EnableSlotsPayload());
 		}
 	}
 

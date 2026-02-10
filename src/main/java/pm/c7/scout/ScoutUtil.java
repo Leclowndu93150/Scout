@@ -5,11 +5,8 @@ import dev.emi.trinkets.api.TrinketComponent;
 import dev.emi.trinkets.api.TrinketsApi;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.Inventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.screen.PlayerScreenHandler;
@@ -29,9 +26,9 @@ import java.util.Optional;
 public class ScoutUtil {
 	public static final Logger LOGGER = LoggerFactory.getLogger("Scout");
 	public static final String MOD_ID = "scout";
-	public static final Identifier SLOT_TEXTURE = new Identifier(MOD_ID, "textures/gui/slots.png");
+	public static final Identifier SLOT_TEXTURE = Identifier.of(MOD_ID, "textures/gui/slots.png");
 
-	public static final TagKey<Item> TAG_ITEM_BLACKLIST = TagKey.of(RegistryKeys.ITEM, new Identifier(MOD_ID, "blacklist"));
+	public static final TagKey<Item> TAG_ITEM_BLACKLIST = TagKey.of(RegistryKeys.ITEM, Identifier.of(MOD_ID, "blacklist"));
 
 	public static final int MAX_SATCHEL_SLOTS = 18;
 	public static final int MAX_POUCH_SLOTS = 6;
@@ -71,30 +68,6 @@ public class ScoutUtil {
 		}
 
 		return targetStack;
-	}
-
-	public static NbtList inventoryToTag(Inventory inventory) {
-		NbtList tag = new NbtList();
-
-		for(int i = 0; i < inventory.size(); i++) {
-			NbtCompound stackTag = new NbtCompound();
-			stackTag.putInt("Slot", i);
-			stackTag.put("Stack", inventory.getStack(i).writeNbt(new NbtCompound()));
-			tag.add(stackTag);
-		}
-
-		return tag;
-	}
-
-	public static void inventoryFromTag(NbtList tag, Inventory inventory) {
-		inventory.clear();
-
-		tag.forEach(element -> {
-			NbtCompound stackTag = (NbtCompound) element;
-			int slot = stackTag.getInt("Slot");
-			ItemStack stack = ItemStack.fromNbt(stackTag.getCompound("Stack"));
-			inventory.setStack(slot, stack);
-		});
 	}
 
 	public static boolean isBagSlot(int slot) {

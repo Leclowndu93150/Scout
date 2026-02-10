@@ -1,13 +1,12 @@
 {
   "type": "minecraft:crafting_shaped",
-  "lib39:discovered_via": "scout:satchel_strap",
   "pattern": ["SlS", "lbl", "sls"],
   "key": {
     "l": {
       "item": "scout:tanned_leather"
     },
     "s": {
-      "tag": "c:string"
+      "item": "minecraft:string"
     },
     "b": {
       "item": "minecraft:stone_button"
@@ -17,6 +16,6 @@
     }
   },
   "result": {
-    "item": "scout:satchel"
+    "id": "scout:satchel"
   }
 }

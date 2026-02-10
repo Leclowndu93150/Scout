@@ -1,10 +1,12 @@
 package pm.c7.scout.mixin;
 
+import java.util.List;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BowItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,9 +20,9 @@ import pm.c7.scout.item.BaseBagItem;
 @Mixin(BowItem.class)
 public class BowItemMixin {
 	@Inject(method = "onStoppedUsing", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;playSound(Lnet/minecraft/entity/player/PlayerEntity;DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)V"), locals = LocalCapture.CAPTURE_FAILHARD)
-	public void scout$arrowsFromBags(ItemStack stack, World world, LivingEntity user, int remainingUseTicks, CallbackInfo ci, PlayerEntity playerEntity, boolean bl, ItemStack itemStack, int maxTime, float f) {
+	public void scout$arrowsFromBags(ItemStack stack, World world, LivingEntity user, int remainingUseTicks, CallbackInfo ci, PlayerEntity playerEntity, ItemStack itemStack, int i, float f) {
 		if (ScoutConfig.useArrows) {
-			boolean infinity = bl && itemStack.isOf(Items.ARROW);
+			boolean infinity = itemStack.isOf(Items.ARROW) && playerEntity.getAbilities().creativeMode;
 			boolean hasRan = false;
 
 			if (!infinity && !playerEntity.getAbilities().creativeMode) {
@@ -32,12 +34,12 @@ public class BowItemMixin {
 					BaseBagItem item = (BaseBagItem) leftPouch.getItem();
 					var inv = item.getInventory(leftPouch);
 
-					for(int i = 0; i < inv.size(); ++i) {
-						ItemStack invStack = inv.getStack(i);
+					for(int s = 0; s < inv.size(); ++s) {
+						ItemStack invStack = inv.getStack(s);
 						if (ItemStack.areEqual(invStack, itemStack)) {
 							invStack.decrement(1);
 							if (invStack.isEmpty()) {
-								inv.setStack(i, ItemStack.EMPTY);
+								inv.setStack(s, ItemStack.EMPTY);
 							}
 							inv.markDirty();
 							hasRan = true;
@@ -49,12 +51,12 @@ public class BowItemMixin {
 					BaseBagItem item = (BaseBagItem) rightPouch.getItem();
 					var inv = item.getInventory(rightPouch);
 
-					for(int i = 0; i < inv.size(); ++i) {
-						ItemStack invStack = inv.getStack(i);
+					for(int s = 0; s < inv.size(); ++s) {
+						ItemStack invStack = inv.getStack(s);
 						if (ItemStack.areEqual(invStack, itemStack)) {
 							invStack.decrement(1);
 							if (invStack.isEmpty()) {
-								inv.setStack(i, ItemStack.EMPTY);
+								inv.setStack(s, ItemStack.EMPTY);
 							}
 							inv.markDirty();
 							hasRan = true;
@@ -66,12 +68,12 @@ public class BowItemMixin {
 					BaseBagItem item = (BaseBagItem) satchel.getItem();
 					var inv = item.getInventory(satchel);
 
-					for(int i = 0; i < inv.size(); ++i) {
-						ItemStack invStack = inv.getStack(i);
+					for(int s = 0; s < inv.size(); ++s) {
+						ItemStack invStack = inv.getStack(s);
 						if (ItemStack.areEqual(invStack, itemStack)) {
 							invStack.decrement(1);
 							if (invStack.isEmpty()) {
-								inv.setStack(i, ItemStack.EMPTY);
+								inv.setStack(s, ItemStack.EMPTY);
 							}
 							inv.markDirty();
 							hasRan = true;

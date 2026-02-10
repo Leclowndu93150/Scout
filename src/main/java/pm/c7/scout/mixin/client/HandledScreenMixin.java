@@ -44,7 +44,7 @@ public abstract class HandledScreenMixin<T extends ScreenHandler> extends Screen
 	@Shadow
 	protected T handler;
 
-	@Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/HandledScreen;drawBackground(Lnet/minecraft/client/gui/DrawContext;FII)V"))
+	@Inject(method = "renderBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/ingame/HandledScreen;drawBackground(Lnet/minecraft/client/gui/DrawContext;FII)V"))
 	private void scout$drawSatchelRow(DrawContext graphics, int mouseX, int mouseY, float delta, CallbackInfo ci) {
 		if (this.client != null && this.client.player != null && !ScoutUtilClient.isScreenBlacklisted(this)) {
 			var playerInventory = this.client.player.getInventory();

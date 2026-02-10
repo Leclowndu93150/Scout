@@ -1,10 +1,11 @@
 {
   "type": "minecraft:campfire_cooking",
-  "lib39:discovered_via": "minecraft:leather",
   "ingredient": {
-    "tag": "c:leather"
+    "item": "minecraft:leather"
   },
-  "result": "scout:tanned_leather",
+  "result": {
+    "id": "scout:tanned_leather"
+  },
   "experience": 0,
   "cookingtime": 600
 }
