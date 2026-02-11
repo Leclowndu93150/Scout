@@ -20,6 +20,7 @@
     "emi": ["pm.c7.scout.client.compat.ScoutEmiPlugin"]
   },
   "mixins": ["scout.mixins.json"],
+  "accessWidener": "scout.accesswidener",
 
   "depends": {
     "fabric": ">=${fabric_version}",

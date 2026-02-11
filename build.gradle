@@ -32,6 +32,8 @@ repositories {
 }
 
 loom {
+	accessWidenerPath = file("src/main/resources/scout.accesswidener")
+
 	// Loom and Loader both use this block in order to gather more information about your mod.
 	mods {
 		// This should match your mod id.

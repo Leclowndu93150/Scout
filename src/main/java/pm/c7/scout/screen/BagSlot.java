@@ -97,8 +97,10 @@ public class BagSlot extends Slot {
 	}
 	public void setX(int x) {
 		this.realX = x;
+		this.x = x;
 	}
 	public void setY(int y) {
 		this.realY = y;
+		this.y = y;
 	}
 }
