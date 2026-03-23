@@ -1,18 +1,19 @@
 package pm.c7.scout;
 
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.util.Identifier;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload.Type;
+import net.minecraft.resources.ResourceLocation;
 
 public class ScoutNetworking {
-	public record EnableSlotsPayload() implements CustomPayload {
-		public static final Id<EnableSlotsPayload> ID = new Id<>(Identifier.of(ScoutUtil.MOD_ID, "enable_slots"));
-		public static final PacketCodec<PacketByteBuf, EnableSlotsPayload> CODEC = PacketCodec.unit(new EnableSlotsPayload());
+	public record EnableSlotsPayload() implements CustomPacketPayload {
+		public static final Type<EnableSlotsPayload> ID = new Type<>(ResourceLocation.fromNamespaceAndPath(ScoutUtil.MOD_ID, "enable_slots"));
+		public static final StreamCodec<FriendlyByteBuf, EnableSlotsPayload> CODEC = StreamCodec.unit(new EnableSlotsPayload());
 
 		@Override
-		public Id<? extends CustomPayload> getId() {
+		public Type<? extends CustomPacketPayload> type() {
 			return ID;
 		}
 	}

@@ -1,0 +1,62 @@
+package pm.c7.scout.mixin;
+
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
+import pm.c7.scout.ScoutUtil;
+import pm.c7.scout.config.ScoutConfig;
+import pm.c7.scout.item.BaseBagItem;
+import pm.c7.scout.item.IBagItem;
+
+import java.util.function.Predicate;
+
+@Mixin(Player.class)
+public class PlayerMixin {
+	@Inject(method = "getProjectile", at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/world/item/ProjectileWeaponItem;getAllSupportedProjectiles()Ljava/util/function/Predicate;"), locals = LocalCapture.CAPTURE_FAILHARD, cancellable = true)
+	public void scout$arrowsFromBags(ItemStack stack, CallbackInfoReturnable<ItemStack> cir, Predicate<ItemStack> predicate) {
+		if (ScoutConfig.useArrows) {
+			var self = (Player) (Object) this;
+			var leftPouch = ScoutUtil.findBagItem(self, BaseBagItem.BagType.POUCH, false);
+			var rightPouch = ScoutUtil.findBagItem(self, BaseBagItem.BagType.POUCH, true);
+			var satchel = ScoutUtil.findBagItem(self, BaseBagItem.BagType.SATCHEL, false);
+
+			if (!leftPouch.isEmpty()) {
+				IBagItem item = (IBagItem) leftPouch.getItem();
+				var inv = item.getInventory(leftPouch);
+
+				for(int i = 0; i < inv.getContainerSize(); ++i) {
+					ItemStack invStack = inv.getItem(i);
+					if (predicate.test(invStack)) {
+						cir.setReturnValue(invStack);
+					}
+				}
+			}
+			if (!rightPouch.isEmpty()) {
+				IBagItem item = (IBagItem) rightPouch.getItem();
+				var inv = item.getInventory(rightPouch);
+
+				for(int i = 0; i < inv.getContainerSize(); ++i) {
+					ItemStack invStack = inv.getItem(i);
+					if (predicate.test(invStack)) {
+						cir.setReturnValue(invStack);
+					}
+				}
+			}
+			if (!satchel.isEmpty()) {
+				IBagItem item = (IBagItem) satchel.getItem();
+				var inv = item.getInventory(satchel);
+
+				for(int i = 0; i < inv.getContainerSize(); ++i) {
+					ItemStack invStack = inv.getItem(i);
+					if (predicate.test(invStack)) {
+						cir.setReturnValue(invStack);
+					}
+				}
+			}
+		}
+	}
+}

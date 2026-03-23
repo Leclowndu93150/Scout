@@ -3,22 +3,24 @@ package pm.c7.scout.item;
 import dev.emi.trinkets.api.SlotReference;
 import dev.emi.trinkets.api.TrinketItem;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.SimpleInventory;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.ContainerComponent;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.tooltip.TooltipData;
-import net.minecraft.item.tooltip.TooltipType;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.collection.DefaultedList;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.Container;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.Item.Properties;
+import net.minecraft.world.item.Item.TooltipContext;
+import net.minecraft.world.item.component.ItemContainerContents;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.inventory.tooltip.TooltipComponent;
+import net.minecraft.world.item.TooltipFlag;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.network.chat.Component;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.NonNullList;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 import pm.c7.scout.ScoutNetworking;
@@ -33,7 +35,7 @@ public class BaseBagItem extends TrinketItem {
 	private final int slots;
 	private final BagType type;
 
-	public BaseBagItem(Settings settings, int slots, BagType type) {
+	public BaseBagItem(Properties settings, int slots, BagType type) {
 		super(settings);
 
 		if (type == BagType.SATCHEL && slots > ScoutUtil.MAX_SATCHEL_SLOTS) {
@@ -56,37 +58,37 @@ public class BaseBagItem extends TrinketItem {
 	}
 
 	@Override
-	public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
-		super.appendTooltip(stack, context, tooltip, type);
-		tooltip.add(Text.translatable("tooltip.scout.slots", Text.literal(String.valueOf(this.slots)).formatted(Formatting.BLUE)).formatted(Formatting.GRAY));
+	public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag type) {
+		super.appendHoverText(stack, context, tooltip, type);
+		tooltip.add(Component.translatable("tooltip.scout.slots", Component.literal(String.valueOf(this.slots)).withStyle(ChatFormatting.BLUE)).withStyle(ChatFormatting.GRAY));
 	}
 
-	public Inventory getInventory(ItemStack stack) {
-		SimpleInventory inventory = new SimpleInventory(this.slots) {
+	public Container getInventory(ItemStack stack) {
+		SimpleContainer inventory = new SimpleContainer(this.slots) {
 			@Override
-			public void markDirty() {
-				DefaultedList<ItemStack> stacks = DefaultedList.ofSize(this.size(), ItemStack.EMPTY);
-				for (int i = 0; i < this.size(); i++) {
-					stacks.set(i, this.getStack(i));
+			public void setChanged() {
+				NonNullList<ItemStack> stacks = NonNullList.withSize(this.getContainerSize(), ItemStack.EMPTY);
+				for (int i = 0; i < this.getContainerSize(); i++) {
+					stacks.set(i, this.getItem(i));
 				}
-				stack.set(DataComponentTypes.CONTAINER, ContainerComponent.fromStacks(stacks));
-				super.markDirty();
+				stack.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(stacks));
+				super.setChanged();
 			}
 		};
 
-		ContainerComponent container = stack.getOrDefault(DataComponentTypes.CONTAINER, ContainerComponent.DEFAULT);
-		container.copyTo(inventory.getHeldStacks());
+		ItemContainerContents container = stack.getOrDefault(DataComponents.CONTAINER, ItemContainerContents.EMPTY);
+		container.copyInto(inventory.getItems());
 
 		return inventory;
 	}
 
 	@Override
-	public Optional<TooltipData> getTooltipData(ItemStack stack) {
-		DefaultedList<ItemStack> stacks = DefaultedList.of();
-		Inventory inventory = getInventory(stack);
+	public Optional<TooltipComponent> getTooltipImage(ItemStack stack) {
+		NonNullList<ItemStack> stacks = NonNullList.create();
+		Container inventory = getInventory(stack);
 
 		for (int i = 0; i < slots; i++) {
-			stacks.add(inventory.getStack(i));
+			stacks.add(inventory.getItem(i));
 		}
 
 		if (stacks.stream().allMatch(ItemStack::isEmpty)) return Optional.empty();
@@ -96,21 +98,21 @@ public class BaseBagItem extends TrinketItem {
 
 	@Override
 	public void onEquip(ItemStack stack, SlotReference slotRef, LivingEntity entity) {
-		if (entity instanceof PlayerEntity player)
+		if (entity instanceof Player player)
 			updateSlots(player);
 	}
 
 	@Override
 	public void onUnequip(ItemStack stack, SlotReference slotRef, LivingEntity entity) {
-		if (entity instanceof PlayerEntity player)
+		if (entity instanceof Player player)
 			updateSlots(player);
 	}
 
-	private void updateSlots(PlayerEntity player) {
-		ScoutScreenHandler handler = (ScoutScreenHandler) player.playerScreenHandler;
+	private void updateSlots(Player player) {
+		ScoutScreenHandler handler = (ScoutScreenHandler) player.inventoryMenu;
 
 		ItemStack satchelStack = ScoutUtil.findBagItem(player, BagType.SATCHEL, false);
-		DefaultedList<BagSlot> satchelSlots = handler.scout$getSatchelSlots();
+		NonNullList<BagSlot> satchelSlots = handler.scout$getSatchelSlots();
 
 		for (int i = 0; i < ScoutUtil.MAX_SATCHEL_SLOTS; i++) {
 			BagSlot slot = satchelSlots.get(i);
@@ -119,7 +121,7 @@ public class BaseBagItem extends TrinketItem {
 		}
 		if (!satchelStack.isEmpty()) {
 			BaseBagItem satchelItem = (BaseBagItem) satchelStack.getItem();
-			Inventory satchelInv = satchelItem.getInventory(satchelStack);
+			Container satchelInv = satchelItem.getInventory(satchelStack);
 
 			for (int i = 0; i < satchelItem.getSlotCount(); i++) {
 				BagSlot slot = satchelSlots.get(i);
@@ -129,7 +131,7 @@ public class BaseBagItem extends TrinketItem {
 		}
 
 		ItemStack leftPouchStack = ScoutUtil.findBagItem(player, BagType.POUCH, false);
-		DefaultedList<BagSlot> leftPouchSlots = handler.scout$getLeftPouchSlots();
+		NonNullList<BagSlot> leftPouchSlots = handler.scout$getLeftPouchSlots();
 
 		for (int i = 0; i < ScoutUtil.MAX_POUCH_SLOTS; i++) {
 			BagSlot slot = leftPouchSlots.get(i);
@@ -138,7 +140,7 @@ public class BaseBagItem extends TrinketItem {
 		}
 		if (!leftPouchStack.isEmpty()) {
 			BaseBagItem leftPouchItem = (BaseBagItem) leftPouchStack.getItem();
-			Inventory leftPouchInv = leftPouchItem.getInventory(leftPouchStack);
+			Container leftPouchInv = leftPouchItem.getInventory(leftPouchStack);
 
 			for (int i = 0; i < leftPouchItem.getSlotCount(); i++) {
 				BagSlot slot = leftPouchSlots.get(i);
@@ -148,7 +150,7 @@ public class BaseBagItem extends TrinketItem {
 		}
 
 		ItemStack rightPouchStack = ScoutUtil.findBagItem(player, BagType.POUCH, true);
-		DefaultedList<BagSlot> rightPouchSlots = handler.scout$getRightPouchSlots();
+		NonNullList<BagSlot> rightPouchSlots = handler.scout$getRightPouchSlots();
 
 		for (int i = 0; i < ScoutUtil.MAX_POUCH_SLOTS; i++) {
 			BagSlot slot = rightPouchSlots.get(i);
@@ -157,7 +159,7 @@ public class BaseBagItem extends TrinketItem {
 		}
 		if (!rightPouchStack.isEmpty()) {
 			BaseBagItem rightPouchItem = (BaseBagItem) rightPouchStack.getItem();
-			Inventory rightPouchInv = rightPouchItem.getInventory(rightPouchStack);
+			Container rightPouchInv = rightPouchItem.getInventory(rightPouchStack);
 
 			for (int i = 0; i < rightPouchItem.getSlotCount(); i++) {
 				BagSlot slot = rightPouchSlots.get(i);
@@ -166,7 +168,7 @@ public class BaseBagItem extends TrinketItem {
 			}
 		}
 
-		if (player instanceof ServerPlayerEntity serverPlayer) {
+		if (player instanceof ServerPlayer serverPlayer) {
 			ServerPlayNetworking.send(serverPlayer, new ScoutNetworking.EnableSlotsPayload());
 		}
 	}
@@ -175,7 +177,7 @@ public class BaseBagItem extends TrinketItem {
 	public boolean canEquip(ItemStack stack, SlotReference slot, LivingEntity entity) {
 		Item item = stack.getItem();
 
-		ItemStack slotStack = slot.inventory().getStack(slot.index());
+		ItemStack slotStack = slot.inventory().getItem(slot.index());
 		Item slotItem = slotStack.getItem();
 
 		if (slotItem instanceof BaseBagItem) {
@@ -183,20 +185,20 @@ public class BaseBagItem extends TrinketItem {
 				if (((BaseBagItem) slotItem).getType() == BagType.SATCHEL) {
 					return true;
 				} else {
-					return ScoutUtil.findBagItem((PlayerEntity) entity, BagType.SATCHEL, false).isEmpty();
+					return ScoutUtil.findBagItem((Player) entity, BagType.SATCHEL, false).isEmpty();
 				}
 			} else if (((BaseBagItem) item).getType() == BagType.POUCH) {
 				if (((BaseBagItem) slotItem).getType() == BagType.POUCH) {
 					return true;
 				} else {
-					return ScoutUtil.findBagItem((PlayerEntity) entity, BagType.POUCH, true).isEmpty();
+					return ScoutUtil.findBagItem((Player) entity, BagType.POUCH, true).isEmpty();
 				}
 			}
 		} else {
 			if (((BaseBagItem) item).getType() == BagType.SATCHEL) {
-				return ScoutUtil.findBagItem((PlayerEntity) entity, BagType.SATCHEL, false).isEmpty();
+				return ScoutUtil.findBagItem((Player) entity, BagType.SATCHEL, false).isEmpty();
 			} else if (((BaseBagItem) item).getType() == BagType.POUCH) {
-				return ScoutUtil.findBagItem((PlayerEntity) entity, BagType.POUCH, true).isEmpty();
+				return ScoutUtil.findBagItem((Player) entity, BagType.POUCH, true).isEmpty();
 			}
 		}
 
@@ -204,11 +206,11 @@ public class BaseBagItem extends TrinketItem {
 	}
 
 	@Override
-	public void inventoryTick(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
+	public void inventoryTick(ItemStack stack, Level world, Entity entity, int slot, boolean selected) {
 		var inv = getInventory(stack);
 
-		for (int i = 0; i < inv.size(); i++) {
-			var invStack = inv.getStack(i);
+		for (int i = 0; i < inv.getContainerSize(); i++) {
+			var invStack = inv.getItem(i);
 			invStack.inventoryTick(world, entity, i, false);
 		}
 	}
@@ -217,9 +219,9 @@ public class BaseBagItem extends TrinketItem {
 	public void tick(ItemStack stack, SlotReference slot, LivingEntity entity) {
 		var inv = getInventory(stack);
 
-		for (int i = 0; i < inv.size(); i++) {
-			var invStack = inv.getStack(i);
-			invStack.inventoryTick(entity.getWorld(), entity, i, false);
+		for (int i = 0; i < inv.getContainerSize(); i++) {
+			var invStack = inv.getItem(i);
+			invStack.inventoryTick(entity.level(), entity, i, false);
 		}
 	}
 

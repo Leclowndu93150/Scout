@@ -1,0 +1,26 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "pm.c7.scout.neoforge.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "plugin": "pm.c7.scout.ScoutMixin",
+  "refmap": "scout.refmap.json",
+  "mixins": [
+    "InventoryMenuMixin",
+    "AbstractContainerMenuMixin",
+    "ServerPlayerMixin",
+    "PlayerMixin"
+  ],
+  "client": [
+    "client.AbstractContainerScreenMixin",
+    "client.AbstractContainerMenuMixin",
+    "client.NonNullListMixin"
+  ],
+  "server": [
+    "server.NonNullListMixin",
+    "server.AbstractContainerMenuMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

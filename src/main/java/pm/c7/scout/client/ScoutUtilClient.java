@@ -2,19 +2,19 @@ package pm.c7.scout.client;
 
 import org.jetbrains.annotations.Nullable;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.ingame.AbstractFurnaceScreen;
-import net.minecraft.client.gui.screen.ingame.CraftingScreen;
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen;
-import net.minecraft.client.gui.screen.ingame.InventoryScreen;
-import net.minecraft.screen.PlayerScreenHandler;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.AbstractFurnaceScreen;
+import net.minecraft.client.gui.screens.inventory.CraftingScreen;
+import net.minecraft.client.gui.screens.inventory.ContainerScreen;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.world.inventory.InventoryMenu;
 
 public class ScoutUtilClient {
-	public static @Nullable PlayerScreenHandler getPlayerScreenHandler() {
-		var client = MinecraftClient.getInstance();
+	public static @Nullable InventoryMenu getPlayerScreenHandler() {
+		var client = Minecraft.getInstance();
 		if (client != null && client.player != null) {
-			return client.player.playerScreenHandler;
+			return client.player.inventoryMenu;
 		}
 
 		return null;
@@ -25,6 +25,6 @@ public class ScoutUtilClient {
 		return screen instanceof InventoryScreen
 			|| screen instanceof CraftingScreen
 			|| screen instanceof AbstractFurnaceScreen
-			|| screen instanceof GenericContainerScreen;
+			|| screen instanceof ContainerScreen;
 	}
 }

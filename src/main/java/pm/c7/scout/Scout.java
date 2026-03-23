@@ -2,27 +2,27 @@ package pm.c7.scout;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
-import net.minecraft.item.ItemGroup;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.Registry;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 
 import pm.c7.scout.config.ScoutConfig;
 import pm.c7.scout.registry.ScoutItems;
 
 public class Scout implements ModInitializer {
-	public static final ItemGroup ITEM_GROUP = FabricItemGroup.builder()
+	public static final CreativeModeTab ITEM_GROUP = FabricItemGroup.builder()
 		.icon(() -> new ItemStack(ScoutItems.SATCHEL))
-		.displayName(Text.translatable("itemGroup.scout.itemgroup"))
-		.entries((context, entries) -> {
-			entries.add(ScoutItems.TANNED_LEATHER);
-			entries.add(ScoutItems.SATCHEL_STRAP);
-			entries.add(ScoutItems.SATCHEL);
-			entries.add(ScoutItems.UPGRADED_SATCHEL);
-			entries.add(ScoutItems.POUCH);
-			entries.add(ScoutItems.UPGRADED_POUCH);
+		.title(Component.translatable("itemGroup.scout.itemgroup"))
+		.displayItems((context, entries) -> {
+			entries.accept(ScoutItems.TANNED_LEATHER);
+			entries.accept(ScoutItems.SATCHEL_STRAP);
+			entries.accept(ScoutItems.SATCHEL);
+			entries.accept(ScoutItems.UPGRADED_SATCHEL);
+			entries.accept(ScoutItems.POUCH);
+			entries.accept(ScoutItems.UPGRADED_POUCH);
 		})
 		.build();
 
@@ -32,6 +32,6 @@ public class Scout implements ModInitializer {
 		ScoutConfig.loadConfig();
 		ScoutNetworking.init();
 		ScoutItems.init();
-		Registry.register(Registries.ITEM_GROUP, Identifier.of(ScoutUtil.MOD_ID, "itemgroup"), ITEM_GROUP);
+		Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, ResourceLocation.fromNamespaceAndPath(ScoutUtil.MOD_ID, "itemgroup"), ITEM_GROUP);
 	}
 }

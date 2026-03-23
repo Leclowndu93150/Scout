@@ -3,19 +3,19 @@ package pm.c7.scout;
 import dev.emi.trinkets.api.SlotReference;
 import dev.emi.trinkets.api.TrinketComponent;
 import dev.emi.trinkets.api.TrinketsApi;
-import net.minecraft.block.Block;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.tag.TagKey;
-import net.minecraft.screen.PlayerScreenHandler;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Pair;
-import net.minecraft.util.collection.DefaultedList;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.inventory.InventoryMenu;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Tuple;
+import net.minecraft.core.NonNullList;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,9 +27,9 @@ import java.util.Optional;
 public class ScoutUtil {
 	public static final Logger LOGGER = LoggerFactory.getLogger("Scout");
 	public static final String MOD_ID = "scout";
-	public static final Identifier SLOT_TEXTURE = Identifier.of(MOD_ID, "textures/gui/slots.png");
+	public static final ResourceLocation SLOT_TEXTURE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/slots.png");
 
-	public static final TagKey<Item> TAG_ITEM_BLACKLIST = TagKey.of(RegistryKeys.ITEM, Identifier.of(MOD_ID, "blacklist"));
+	public static final TagKey<Item> TAG_ITEM_BLACKLIST = TagKey.create(Registries.ITEM, ResourceLocation.fromNamespaceAndPath(MOD_ID, "blacklist"));
 
 	public static final int MAX_SATCHEL_SLOTS = 18;
 	public static final int MAX_POUCH_SLOTS = 6;
@@ -40,15 +40,15 @@ public class ScoutUtil {
 	public static final int RIGHT_POUCH_SLOT_START = LEFT_POUCH_SLOT_START - MAX_POUCH_SLOTS;
 	public static final int BAG_SLOTS_END = RIGHT_POUCH_SLOT_START - MAX_POUCH_SLOTS;
 
-	public static ItemStack findBagItem(PlayerEntity player, BaseBagItem.BagType type, boolean right) {
+	public static ItemStack findBagItem(Player player, BaseBagItem.BagType type, boolean right) {
 		ItemStack targetStack = ItemStack.EMPTY;
 
 		boolean hasFirstPouch = false;
 		Optional<TrinketComponent> _component = TrinketsApi.getTrinketComponent(player);
 		if (_component.isPresent()) {
 			TrinketComponent component = _component.get();
-			for (Pair<SlotReference, ItemStack> pair : component.getAllEquipped()) {
-				ItemStack slotStack = pair.getRight();
+			for (Tuple<SlotReference, ItemStack> pair : component.getAllEquipped()) {
+				ItemStack slotStack = pair.getB();
 
 				if (slotStack.getItem() instanceof BaseBagItem bagItem) {
 					if (bagItem.getType() == type) {
@@ -75,20 +75,20 @@ public class ScoutUtil {
 		return slot <= SATCHEL_SLOT_START && slot > BAG_SLOTS_END;
 	}
 
-	public static @Nullable Slot getBagSlot(int slot, PlayerScreenHandler playerScreenHandler) {
+	public static @Nullable Slot getBagSlot(int slot, InventoryMenu playerScreenHandler) {
 		var scoutScreenHandler = (ScoutScreenHandler) playerScreenHandler;
 		if (slot <= SATCHEL_SLOT_START && slot > LEFT_POUCH_SLOT_START) {
-			int realSlot = MathHelper.abs(slot - SATCHEL_SLOT_START);
+			int realSlot = Mth.abs(slot - SATCHEL_SLOT_START);
 			var slots = scoutScreenHandler.scout$getSatchelSlots();
 
 			return slots.get(realSlot);
 		} else if (slot <= LEFT_POUCH_SLOT_START && slot > RIGHT_POUCH_SLOT_START) {
-			int realSlot = MathHelper.abs(slot - LEFT_POUCH_SLOT_START);
+			int realSlot = Mth.abs(slot - LEFT_POUCH_SLOT_START);
 			var slots = scoutScreenHandler.scout$getLeftPouchSlots();
 
 			return slots.get(realSlot);
 		} else if (slot <= RIGHT_POUCH_SLOT_START && slot > BAG_SLOTS_END) {
-			int realSlot = MathHelper.abs(slot - RIGHT_POUCH_SLOT_START);
+			int realSlot = Mth.abs(slot - RIGHT_POUCH_SLOT_START);
 			var slots = scoutScreenHandler.scout$getRightPouchSlots();
 
 			return slots.get(realSlot);
@@ -97,9 +97,9 @@ public class ScoutUtil {
 		}
 	}
 
-	public static DefaultedList<Slot> getAllBagSlots(PlayerScreenHandler playerScreenHandler) {
+	public static NonNullList<Slot> getAllBagSlots(InventoryMenu playerScreenHandler) {
 		var scoutScreenHandler = (ScoutScreenHandler) playerScreenHandler;
-		DefaultedList<Slot> out = DefaultedList.ofSize(TOTAL_SLOTS);
+		NonNullList<Slot> out = NonNullList.createWithCapacity(TOTAL_SLOTS);
 		out.addAll(scoutScreenHandler.scout$getSatchelSlots());
 		out.addAll(scoutScreenHandler.scout$getLeftPouchSlots());
 		out.addAll(scoutScreenHandler.scout$getRightPouchSlots());

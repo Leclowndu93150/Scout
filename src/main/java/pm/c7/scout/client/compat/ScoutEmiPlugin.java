@@ -3,32 +3,32 @@ package pm.c7.scout.client.compat;
 import dev.emi.emi.api.EmiPlugin;
 import dev.emi.emi.api.EmiRegistry;
 import dev.emi.emi.api.widget.Bounds;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.slot.Slot;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.Slot;
 import pm.c7.scout.ScoutUtil;
 import pm.c7.scout.client.ScoutUtilClient;
 import pm.c7.scout.item.BaseBagItem;
 import pm.c7.scout.item.BaseBagItem.BagType;
-import pm.c7.scout.mixin.client.HandledScreenAccessor;
+import pm.c7.scout.mixin.client.AbstractContainerScreenAccessor;
 
 public class ScoutEmiPlugin implements EmiPlugin {
 	@Override
 	public void register(EmiRegistry registry) {
 		registry.addGenericExclusionArea((screen, consumer) -> {
-			if (!(screen instanceof HandledScreen<?> handledScreen)) return;
+			if (!(screen instanceof AbstractContainerScreen<?> handledScreen)) return;
 			if (!ScoutUtilClient.isScreenAllowed(screen)) return;
 
-			MinecraftClient client = MinecraftClient.getInstance();
+			Minecraft client = Minecraft.getInstance();
 
-			var handledScreenAccessor = (HandledScreenAccessor<?>) handledScreen;
-			ScreenHandler handler = handledScreenAccessor.getHandler();
-			var sx = handledScreenAccessor.getX();
-			var sy = handledScreenAccessor.getY();
-			var sw = handledScreenAccessor.getBackgroundWidth();
-			var sh = handledScreenAccessor.getBackgroundHeight();
+			var handledScreenAccessor = (AbstractContainerScreenAccessor<?>) handledScreen;
+			AbstractContainerMenu handler = handledScreenAccessor.getMenu();
+			var sx = handledScreenAccessor.getLeftPos();
+			var sy = handledScreenAccessor.getTopPos();
+			var sw = handledScreenAccessor.getImageWidth();
+			var sh = handledScreenAccessor.getImageHeight();
 
 			var playerInventory = client.player.getInventory();
 
@@ -38,10 +38,10 @@ public class ScoutEmiPlugin implements EmiPlugin {
 				int slots = bagItem.getSlotCount();
 				int rows = (int) Math.ceil(slots / 9);
 
-				var _hotbarSlot1 = handler.slots.stream().filter(slot->slot.inventory.equals(playerInventory) && slot.getIndex() == 0).findFirst();
+				var _hotbarSlot1 = handler.slots.stream().filter(slot->slot.container.equals(playerInventory) && slot.getContainerSlot() == 0).findFirst();
 				Slot hotbarSlot1 = _hotbarSlot1.isPresent() ? _hotbarSlot1.get() : null;
 				if (hotbarSlot1 != null) {
-					if (hotbarSlot1.isEnabled()) {
+					if (hotbarSlot1.isActive()) {
 						int x = sx + hotbarSlot1.x - 8;
 						int y = sy + hotbarSlot1.y + 22;
 
@@ -59,10 +59,10 @@ public class ScoutEmiPlugin implements EmiPlugin {
 				int slots = bagItem.getSlotCount();
 				int columns = (int) Math.ceil(slots / 3);
 
-				var _topLeftSlot = handler.slots.stream().filter(slot->slot.inventory.equals(playerInventory) && slot.getIndex() == 9).findFirst();
+				var _topLeftSlot = handler.slots.stream().filter(slot->slot.container.equals(playerInventory) && slot.getContainerSlot() == 9).findFirst();
 				Slot topLeftSlot = _topLeftSlot.isPresent() ? _topLeftSlot.get() : null;
 				if (topLeftSlot != null) {
-					if (topLeftSlot.isEnabled()) {
+					if (topLeftSlot.isActive()) {
 						int x = sx + topLeftSlot.x - 7 - (columns * 18);
 						int y = sy + topLeftSlot.y;
 
@@ -80,10 +80,10 @@ public class ScoutEmiPlugin implements EmiPlugin {
 				int slots = bagItem.getSlotCount();
 				int columns = (int) Math.ceil(slots / 3);
 
-				var _topRightSlot = handler.slots.stream().filter(slot->slot.inventory.equals(playerInventory) && slot.getIndex() == 17).findFirst();
+				var _topRightSlot = handler.slots.stream().filter(slot->slot.container.equals(playerInventory) && slot.getContainerSlot() == 17).findFirst();
 				Slot topRightSlot = _topRightSlot.isPresent() ? _topRightSlot.get() : null;
 				if (topRightSlot != null) {
-					if (topRightSlot.isEnabled()) {
+					if (topRightSlot.isActive()) {
 						int x = sx + topRightSlot.x;
 						int y = sy + topRightSlot.y;
 

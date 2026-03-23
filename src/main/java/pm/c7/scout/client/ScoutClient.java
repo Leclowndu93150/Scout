@@ -5,13 +5,13 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityFeatureRendererRegistrationCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.TooltipComponentCallback;
-import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.entity.EntityType;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.util.collection.DefaultedList;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.core.NonNullList;
 
 import pm.c7.scout.ScoutNetworking;
 import pm.c7.scout.ScoutScreenHandler;
@@ -22,7 +22,7 @@ import pm.c7.scout.item.BagTooltipData;
 import pm.c7.scout.item.BaseBagItem;
 import pm.c7.scout.item.BaseBagItem.BagType;
 import pm.c7.scout.client.render.PouchFeatureRenderer;
-import pm.c7.scout.mixin.client.HandledScreenAccessor;
+import pm.c7.scout.mixin.client.AbstractContainerScreenAccessor;
 import pm.c7.scout.screen.BagSlot;
 
 public class ScoutClient implements ClientModInitializer {
@@ -31,10 +31,10 @@ public class ScoutClient implements ClientModInitializer {
 		ClientPlayNetworking.registerGlobalReceiver(ScoutNetworking.EnableSlotsPayload.ID, (payload, context) -> {
 			context.client().execute(() -> {
 				var client = context.client();
-				ScoutScreenHandler screenHandler = (ScoutScreenHandler) client.player.playerScreenHandler;
+				ScoutScreenHandler screenHandler = (ScoutScreenHandler) client.player.inventoryMenu;
 
 				ItemStack satchelStack = ScoutUtil.findBagItem(client.player, BagType.SATCHEL, false);
-				DefaultedList<BagSlot> satchelSlots = screenHandler.scout$getSatchelSlots();
+				NonNullList<BagSlot> satchelSlots = screenHandler.scout$getSatchelSlots();
 
 				for (int i = 0; i < ScoutUtil.MAX_SATCHEL_SLOTS; i++) {
 					BagSlot slot = satchelSlots.get(i);
@@ -43,7 +43,7 @@ public class ScoutClient implements ClientModInitializer {
 				}
 				if (!satchelStack.isEmpty()) {
 					BaseBagItem satchelItem = (BaseBagItem) satchelStack.getItem();
-					Inventory satchelInv = satchelItem.getInventory(satchelStack);
+					Container satchelInv = satchelItem.getInventory(satchelStack);
 
 					for (int i = 0; i < satchelItem.getSlotCount(); i++) {
 						BagSlot slot = satchelSlots.get(i);
@@ -53,7 +53,7 @@ public class ScoutClient implements ClientModInitializer {
 				}
 
 				ItemStack leftPouchStack = ScoutUtil.findBagItem(client.player, BagType.POUCH, false);
-				DefaultedList<BagSlot> leftPouchSlots = screenHandler.scout$getLeftPouchSlots();
+				NonNullList<BagSlot> leftPouchSlots = screenHandler.scout$getLeftPouchSlots();
 
 				for (int i = 0; i < ScoutUtil.MAX_POUCH_SLOTS; i++) {
 					BagSlot slot = leftPouchSlots.get(i);
@@ -62,7 +62,7 @@ public class ScoutClient implements ClientModInitializer {
 				}
 				if (!leftPouchStack.isEmpty()) {
 					BaseBagItem leftPouchItem = (BaseBagItem) leftPouchStack.getItem();
-					Inventory leftPouchInv = leftPouchItem.getInventory(leftPouchStack);
+					Container leftPouchInv = leftPouchItem.getInventory(leftPouchStack);
 
 					for (int i = 0; i < leftPouchItem.getSlotCount(); i++) {
 						BagSlot slot = leftPouchSlots.get(i);
@@ -72,7 +72,7 @@ public class ScoutClient implements ClientModInitializer {
 				}
 
 				ItemStack rightPouchStack = ScoutUtil.findBagItem(client.player, BagType.POUCH, true);
-				DefaultedList<BagSlot> rightPouchSlots = screenHandler.scout$getRightPouchSlots();
+				NonNullList<BagSlot> rightPouchSlots = screenHandler.scout$getRightPouchSlots();
 
 				for (int i = 0; i < ScoutUtil.MAX_POUCH_SLOTS; i++) {
 					BagSlot slot = rightPouchSlots.get(i);
@@ -81,7 +81,7 @@ public class ScoutClient implements ClientModInitializer {
 				}
 				if (!rightPouchStack.isEmpty()) {
 					BaseBagItem rightPouchItem = (BaseBagItem) rightPouchStack.getItem();
-					Inventory rightPouchInv = rightPouchItem.getInventory(rightPouchStack);
+					Container rightPouchInv = rightPouchItem.getInventory(rightPouchStack);
 
 					for (int i = 0; i < rightPouchItem.getSlotCount(); i++) {
 						BagSlot slot = rightPouchSlots.get(i);
@@ -102,16 +102,16 @@ public class ScoutClient implements ClientModInitializer {
 
 		LivingEntityFeatureRendererRegistrationCallback.EVENT.register((entityType, entityRenderer, registrationHelper, context) -> {
 			if (entityType == EntityType.PLAYER) {
-				registrationHelper.register(new PouchFeatureRenderer<>(entityRenderer, context.getHeldItemRenderer()));
+				registrationHelper.register(new PouchFeatureRenderer<>(entityRenderer, context.getItemInHandRenderer()));
 				registrationHelper.register(new SatchelFeatureRenderer<>(entityRenderer));
 			}
 		});
 
 		ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
-			if (screen instanceof HandledScreen<?> handledScreen && client.player != null) {
+			if (screen instanceof AbstractContainerScreen<?> handledScreen && client.player != null) {
 				if (!ScoutUtilClient.isScreenAllowed(screen)) {
 					// realistically no one is going to have a screen bigger than 2147483647 pixels
-					for (Slot slot : ScoutUtil.getAllBagSlots(client.player.playerScreenHandler)) {
+					for (Slot slot : ScoutUtil.getAllBagSlots(client.player.inventoryMenu)) {
 						BagSlot bagSlot = (BagSlot) slot;
 						bagSlot.setX(Integer.MAX_VALUE);
 						bagSlot.setY(Integer.MAX_VALUE);
@@ -119,8 +119,8 @@ public class ScoutClient implements ClientModInitializer {
 					return;
 				}
 
-				var handledScreenAccessor = (HandledScreenAccessor<?>) handledScreen;
-				ScreenHandler handler = handledScreenAccessor.getHandler();
+				var handledScreenAccessor = (AbstractContainerScreenAccessor<?>) handledScreen;
+				AbstractContainerMenu handler = handledScreenAccessor.getMenu();
 
 				var playerInventory = client.player.getInventory();
 
@@ -128,12 +128,12 @@ public class ScoutClient implements ClientModInitializer {
 				int y = 0;
 
 				// satchel
-				var _hotbarSlot1 = handler.slots.stream().filter(slot->slot.inventory.equals(playerInventory) && slot.getIndex() == 0).findFirst();
+				var _hotbarSlot1 = handler.slots.stream().filter(slot->slot.container.equals(playerInventory) && slot.getContainerSlot() == 0).findFirst();
 				Slot hotbarSlot1 = _hotbarSlot1.isPresent() ? _hotbarSlot1.get() : null;
 				if (hotbarSlot1 != null) {
-					if (!hotbarSlot1.isEnabled()) {
+					if (!hotbarSlot1.isActive()) {
 						for (int i = 0; i < ScoutUtil.MAX_SATCHEL_SLOTS; i++) {
-							BagSlot slot = (BagSlot) ScoutUtil.getBagSlot(ScoutUtil.SATCHEL_SLOT_START - i, client.player.playerScreenHandler);
+							BagSlot slot = (BagSlot) ScoutUtil.getBagSlot(ScoutUtil.SATCHEL_SLOT_START - i, client.player.inventoryMenu);
 							if (slot != null) {
 								slot.setX(Integer.MAX_VALUE);
 								slot.setY(Integer.MAX_VALUE);
@@ -148,7 +148,7 @@ public class ScoutClient implements ClientModInitializer {
 								x = hotbarSlot1.x;
 							}
 
-							BagSlot slot = (BagSlot) ScoutUtil.getBagSlot(ScoutUtil.SATCHEL_SLOT_START - i, client.player.playerScreenHandler);
+							BagSlot slot = (BagSlot) ScoutUtil.getBagSlot(ScoutUtil.SATCHEL_SLOT_START - i, client.player.inventoryMenu);
 							if (slot != null) {
 								slot.setX(x);
 								slot.setY(y);
@@ -164,12 +164,12 @@ public class ScoutClient implements ClientModInitializer {
 				}
 
 				// left pouch
-				var _topLeftSlot = handler.slots.stream().filter(slot->slot.inventory.equals(playerInventory) && slot.getIndex() == 9).findFirst();
+				var _topLeftSlot = handler.slots.stream().filter(slot->slot.container.equals(playerInventory) && slot.getContainerSlot() == 9).findFirst();
 				Slot topLeftSlot = _topLeftSlot.isPresent() ? _topLeftSlot.get() : null;
 				if (topLeftSlot != null) {
-					if (!topLeftSlot.isEnabled()) {
+					if (!topLeftSlot.isActive()) {
 						for (int i = 0; i < ScoutUtil.MAX_POUCH_SLOTS; i++) {
-							BagSlot slot = (BagSlot) ScoutUtil.getBagSlot(ScoutUtil.LEFT_POUCH_SLOT_START - i, client.player.playerScreenHandler);
+							BagSlot slot = (BagSlot) ScoutUtil.getBagSlot(ScoutUtil.LEFT_POUCH_SLOT_START - i, client.player.inventoryMenu);
 							if (slot != null) {
 								slot.setX(Integer.MAX_VALUE);
 								slot.setY(Integer.MAX_VALUE);
@@ -185,7 +185,7 @@ public class ScoutClient implements ClientModInitializer {
 								y += 54;
 							}
 
-							BagSlot slot = (BagSlot) ScoutUtil.getBagSlot(ScoutUtil.LEFT_POUCH_SLOT_START - i, client.player.playerScreenHandler);
+							BagSlot slot = (BagSlot) ScoutUtil.getBagSlot(ScoutUtil.LEFT_POUCH_SLOT_START - i, client.player.inventoryMenu);
 							if (slot != null) {
 								slot.setX(x);
 								slot.setY(y);
@@ -197,12 +197,12 @@ public class ScoutClient implements ClientModInitializer {
 				}
 
 				// right pouch
-				var _topRightSlot = handler.slots.stream().filter(slot->slot.inventory.equals(playerInventory) && slot.getIndex() == 17).findFirst();
+				var _topRightSlot = handler.slots.stream().filter(slot->slot.container.equals(playerInventory) && slot.getContainerSlot() == 17).findFirst();
 				Slot topRightSlot = _topRightSlot.isPresent() ? _topRightSlot.get() : null;
 				if (topRightSlot != null) {
-					if (!topRightSlot.isEnabled()) {
+					if (!topRightSlot.isActive()) {
 						for (int i = 0; i < ScoutUtil.MAX_POUCH_SLOTS; i++) {
-							BagSlot slot = (BagSlot) ScoutUtil.getBagSlot(ScoutUtil.RIGHT_POUCH_SLOT_START - i, client.player.playerScreenHandler);
+							BagSlot slot = (BagSlot) ScoutUtil.getBagSlot(ScoutUtil.RIGHT_POUCH_SLOT_START - i, client.player.inventoryMenu);
 							if (slot != null) {
 								slot.setX(Integer.MAX_VALUE);
 								slot.setY(Integer.MAX_VALUE);
@@ -218,7 +218,7 @@ public class ScoutClient implements ClientModInitializer {
 								y += 54;
 							}
 
-							BagSlot slot = (BagSlot) ScoutUtil.getBagSlot(ScoutUtil.RIGHT_POUCH_SLOT_START - i, client.player.playerScreenHandler);
+							BagSlot slot = (BagSlot) ScoutUtil.getBagSlot(ScoutUtil.RIGHT_POUCH_SLOT_START - i, client.player.inventoryMenu);
 							if (slot != null) {
 								slot.setX(x);
 								slot.setY(y);

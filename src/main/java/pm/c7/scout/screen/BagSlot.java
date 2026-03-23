@@ -1,18 +1,18 @@
 package pm.c7.scout.screen;
 
-import net.minecraft.block.ShulkerBoxBlock;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.slot.Slot;
+import net.minecraft.world.level.block.ShulkerBoxBlock;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.Container;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.inventory.Slot;
 import pm.c7.scout.ScoutUtil;
 import pm.c7.scout.config.ScoutConfig;
 import pm.c7.scout.item.BaseBagItem;
 
 public class BagSlot extends Slot {
 	private final int index;
-	public Inventory inventory;
+	public Container inventory;
 	private boolean enabled = false;
 	private int realX;
 	private int realY;
@@ -24,7 +24,7 @@ public class BagSlot extends Slot {
 		this.realY = y;
 	}
 
-	public void setInventory(Inventory inventory) {
+	public void setInventory(Container inventory) {
 		this.inventory = inventory;
 	}
 
@@ -33,11 +33,11 @@ public class BagSlot extends Slot {
 	}
 
 	@Override
-	public boolean canInsert(ItemStack stack) {
+	public boolean mayPlace(ItemStack stack) {
 		if (stack.getItem() instanceof BaseBagItem)
 			return false;
 
-		if (stack.isIn(ScoutUtil.TAG_ITEM_BLACKLIST)) {
+		if (stack.is(ScoutUtil.TAG_ITEM_BLACKLIST)) {
 			return false;
 		}
 
@@ -50,43 +50,43 @@ public class BagSlot extends Slot {
 	}
 
 	@Override
-	public boolean canTakeItems(PlayerEntity playerEntity) {
+	public boolean mayPickup(Player playerEntity) {
 		return enabled && inventory != null;
 	}
 
 	@Override
-	public boolean isEnabled() {
+	public boolean isActive() {
 		return enabled && inventory != null;
 	}
 
 	@Override
-	public ItemStack getStack() {
-		return enabled && this.inventory != null ? this.inventory.getStack(this.index) : ItemStack.EMPTY;
+	public ItemStack getItem() {
+		return enabled && this.inventory != null ? this.inventory.getItem(this.index) : ItemStack.EMPTY;
 	}
 
 	@Override
-	public void setStackNoCallbacks(ItemStack stack) {
+	public void set(ItemStack stack) {
 		if (enabled && this.inventory != null) {
-			this.inventory.setStack(this.index, stack);
-			this.markDirty();
+			this.inventory.setItem(this.index, stack);
+			this.setChanged();
 		}
 	}
 
 	@Override
-	public void markDirty() {
+	public void setChanged() {
 		if (enabled && this.inventory != null) {
-			this.inventory.markDirty();
+			this.inventory.setChanged();
 		}
 	}
 
 	@Override
-	public ItemStack takeStack(int amount) {
-		return enabled && this.inventory != null ? this.inventory.removeStack(this.index, amount) : ItemStack.EMPTY;
+	public ItemStack remove(int amount) {
+		return enabled && this.inventory != null ? this.inventory.removeItem(this.index, amount) : ItemStack.EMPTY;
 	}
 
 	@Override
-	public int getMaxItemCount() {
-		return enabled && this.inventory != null ? this.inventory.getMaxCountPerStack() : 0;
+	public int getMaxStackSize() {
+		return enabled && this.inventory != null ? this.inventory.getMaxStackSize() : 0;
 	}
 
 	public int getX() {

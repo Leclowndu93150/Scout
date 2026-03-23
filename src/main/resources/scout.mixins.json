@@ -6,25 +6,25 @@
   "plugin": "pm.c7.scout.ScoutMixin",
   "mixins": [
     "BowItemMixin",
-    "PlayerEntityMixin",
-    "PlayerScreenHandlerMixin",
-    "ScreenHandlerMixin",
-    "ServerPlayerEntityMixin",
+    "PlayerMixin",
+    "InventoryMenuMixin",
+    "AbstractContainerMenuMixin",
+    "ServerPlayerMixin",
     "ShulkerBoxSlotMixin"
   ],
   "client": [
     "client.AbstractFurnaceScreenMixin",
     "client.CraftingScreenMixin",
-    "client.DefaultedListMixin",
-    "client.HandledScreenAccessor",
-    "client.HandledScreenMixin",
+    "client.NonNullListMixin",
+    "client.AbstractContainerScreenAccessor",
+    "client.AbstractContainerScreenMixin",
     "client.InventoryScreenMixin",
-    "client.RecipeBookWidgetMixin",
-    "client.ScreenHandlerMixin"
+    "client.RecipeBookComponentMixin",
+    "client.AbstractContainerMenuMixin"
   ],
   "server": [
-    "server.DefaultedListMixin",
-    "server.ScreenHandlerMixin"
+    "server.NonNullListMixin",
+    "server.AbstractContainerMenuMixin"
   ],
   "injectors": {
     "defaultRequire": 1

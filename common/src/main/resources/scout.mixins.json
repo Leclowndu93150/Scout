@@ -1,0 +1,23 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "pm.c7.scout.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "plugin": "pm.c7.scout.ScoutMixin",
+  "mixins": [
+    "BowItemMixin",
+    "ShulkerBoxSlotMixin",
+    "SlotAccessor"
+  ],
+  "client": [
+    "client.AbstractFurnaceScreenMixin",
+    "client.CraftingScreenMixin",
+    "client.AbstractContainerScreenAccessor",
+    "client.InventoryScreenMixin",
+    "client.RecipeBookComponentMixin"
+  ],
+  "server": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
