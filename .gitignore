@@ -36,5 +36,8 @@ bin/
 # Eclipse JDT LS
 workspace/
 
+# Secrets
+.env
+
 # macOS
 *.DS_Store

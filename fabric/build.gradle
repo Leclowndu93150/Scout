@@ -1,6 +1,11 @@
 plugins {
     id 'multiloader-loader'
     id 'fabric-loom'
+    id 'me.modmuss50.mod-publish-plugin'
+}
+
+base {
+    archivesName = "${mod_id}-${minecraft_version}-Fabric"
 }
 
 dependencies {
@@ -40,4 +45,28 @@ loom {
             runDir('runs/server')
         }
     }
+}
+
+publishMods {
+    file = remapJar.archiveFile
+    displayName = remapJar.archiveFile.map { it.asFile.name - '.jar' }
+    changelog = "Release for Minecraft ${minecraft_version}"
+    type = STABLE
+    modLoaders.add("fabric")
+
+    curseforge {
+        accessToken = rootProject.ext.curseforgeToken
+        projectId = "1494255"
+        minecraftVersions.add("${minecraft_version}")
+        javaVersions.add(JavaVersion.VERSION_21)
+        requires("trinkets")
+        requires("fabric-api")
+        optional("jei")
+    }
+
+//    modrinth {
+//        accessToken = rootProject.ext.modrinthToken
+//        projectId = "MODRINTH_PROJECT_ID"
+//        minecraftVersions.add("${minecraft_version}")
+//    }
 }
