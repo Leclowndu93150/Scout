@@ -27,11 +27,11 @@ import pm.c7.scout.screen.BagSlot;
 public abstract class AbstractContainerMenuMixin {
 	@Inject(method = "clicked", at = @At("HEAD"), cancellable = true)
 	private void scout$handleBagSlotClick(int slotIndex, int button, ClickType actionType, Player player, CallbackInfo ci) {
-		ScoutUtil.LOGGER.info("[Scout] clicked slotIndex={} button={} action={} isBagSlot={}", slotIndex, button, actionType, ScoutUtil.isBagSlot(slotIndex));
+//		ScoutUtil.LOGGER.info("[Scout] clicked slotIndex={} button={} action={} isBagSlot={}", slotIndex, button, actionType, ScoutUtil.isBagSlot(slotIndex));
 		if (!ScoutUtil.isBagSlot(slotIndex)) return;
 
 		Slot slot = ScoutUtil.getBagSlot(slotIndex, player.inventoryMenu);
-		ScoutUtil.LOGGER.info("[Scout] bagSlot={} enabled={} inventory={}", slot, slot != null ? ((BagSlot)slot).isActive() : "null", slot != null ? ((BagSlot)slot).inventory : "null");
+//		ScoutUtil.LOGGER.info("[Scout] bagSlot={} enabled={} inventory={}", slot, slot != null ? ((BagSlot)slot).isActive() : "null", slot != null ? ((BagSlot)slot).inventory : "null");
 		if (slot == null) {
 			ci.cancel();
 			return;
@@ -41,7 +41,7 @@ public abstract class AbstractContainerMenuMixin {
 			case PICKUP -> {
 				ItemStack cursorStack = this.getCarried();
 				ItemStack slotStack = slot.getItem();
-				ScoutUtil.LOGGER.info("[Scout] PICKUP cursor={} slotItem={} mayPlace={}", cursorStack, slotStack, slot.mayPlace(cursorStack));
+//				ScoutUtil.LOGGER.info("[Scout] PICKUP cursor={} slotItem={} mayPlace={}", cursorStack, slotStack, slot.mayPlace(cursorStack));
 
 				if (cursorStack.isEmpty()) {
 					if (!slotStack.isEmpty() && slot.mayPickup(player)) {
